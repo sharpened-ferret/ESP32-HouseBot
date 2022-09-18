@@ -11,6 +11,7 @@
 #include "discord.h"
 #include "discord/session.h"
 #include "discord/message.h"
+#include "esp_sntp.h"
 
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
@@ -37,7 +38,7 @@ static bool BOT_CONNECTED = false;
 
 static discord_handle_t bot;
 
-static const char *TAG = "wifi station";
+static const char *TAG = "Server";
 
 static int s_retry_num = 0;
 
@@ -136,6 +137,21 @@ void wifi_init_sta(void)
     vEventGroupDelete(s_wifi_event_group);
 }
 
+static void time_check() {
+    time_t now;
+    char strftime_buf[64];
+    struct tm timeinfo;
+
+    time(&now);
+    // Set timezone to China Standard Time
+    setenv("GB", "UTC+0", 1);
+    tzset();
+
+    localtime_r(&now, &timeinfo);
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    ESP_LOGI(TAG, "The current date/time in the UK is: %s", strftime_buf);
+}
+
 // Basic Bot Handler
 static void bot_discord_event_handler(void* handler_arg, esp_event_base_t base, int32_t event_id, void* event_data) {
     discord_event_data_t* data = (discord_event_data_t*) event_data;
@@ -151,6 +167,7 @@ static void bot_discord_event_handler(void* handler_arg, esp_event_base_t base, 
                         .channel_id = CHANNEL_ID
                     };
                     discord_message_send(bot, &connectionMsg, NULL);
+                    time_check();
                 }
                 
             }
@@ -163,7 +180,6 @@ static void bot_discord_event_handler(void* handler_arg, esp_event_base_t base, 
             break;
     }
 }
-
 
 void app_main(void)
 {
@@ -178,7 +194,11 @@ void app_main(void)
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
 
-    printf("Boot Triggered");
+    printf("Boot Triggered\n");
+
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
 
     discord_config_t cfg = {
         .intents = DISCORD_INTENT_GUILD_MESSAGES
@@ -188,4 +208,8 @@ void app_main(void)
     discord_register_events(bot, DISCORD_EVENT_ANY, bot_discord_event_handler, NULL);
     discord_login(bot);
     printf("Bot created!\n");
+    
+    // if (BOT_CONNECTED) {
+        
+    // }
 }
