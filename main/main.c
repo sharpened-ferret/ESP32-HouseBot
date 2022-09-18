@@ -12,6 +12,8 @@
 #include "discord/session.h"
 #include "discord/message.h"
 #include "esp_sntp.h"
+#include "esp_sleep.h"
+#include <time.h>
 
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
@@ -28,7 +30,7 @@
 #define CHANNEL_ID CONFIG_CHANNEL_ID
 #define CONNECTION_MSG_ENABLED CONFIG_CONNECTION_MESSAGE_ENABLED
 #define CONNECTION_MSG CONFIG_CONNECTION_MESSAGE
-
+#define REMINDER_MSG CONFIG_REMINDER_MESSAGE
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -37,6 +39,10 @@ static bool BOT_CONNECTED = false;
 //static bool RESTART_FLAG = false;
 
 static discord_handle_t bot;
+static discord_message_t reminder_msg = {
+    .content = REMINDER_MSG,
+    .channel_id = CHANNEL_ID
+};
 
 static const char *TAG = "Server";
 
@@ -150,6 +156,19 @@ static void time_check() {
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGI(TAG, "The current date/time in the UK is: %s", strftime_buf);
+    struct tm *tm_time = localtime(&now);
+    int curr_day = tm_time->tm_wday;
+    ESP_LOGI(TAG, "Current Day: %d", curr_day);
+    if (curr_day == 0) {
+        if (tm_time->tm_hour < 18) {
+            uint32_t sleep_delay = (18 - tm_time->tm_hour) * 60 * 60 * 1000000;
+            esp_sleep_enable_timer_wakeup(sleep_delay);
+            ESP_LOGI(TAG, "Sleeping for %u seconds", sleep_delay);
+            esp_deep_sleep_start();
+        } else {
+            discord_message_send(bot, &reminder_msg, NULL);
+        }
+    }
 }
 
 // Basic Bot Handler

@@ -20,7 +20,7 @@ menu "House-bot Configuration"
 
     config CONNECTION_MESSAGE_ENABLED
         bool "Bot Connection Message On/Off"
-        default true
+        default false
         help
             Enables or disables the bot sending a message when it connects. 
 
@@ -29,6 +29,12 @@ menu "House-bot Configuration"
         default "PLACEHOLDER"
         help
             Sets the ID of the Discord Channel to post to.
+
+    config REMINDER_MESSAGE
+        string "Bin Reminder Message Text"
+        default "Hey, how are those bins doing?"
+        help
+            Sets the message to be sent when the bot sends a bins reminder.
 
     config CONNECTION_MESSAGE
         string "Bot Connection Message Text"
