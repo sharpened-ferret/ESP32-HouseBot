@@ -1,0 +1,39 @@
+menu "House-bot Configuration"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "ssid"
+        help
+            The SSID (network name) for the WiFi network.
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default "password"
+        help
+            The password for the WiFi network.
+
+    config MAXIMUM_RETRY
+        int "Maximum Retry"
+        default 5
+        help
+            Sets the maximum number of connection retry attempts.
+
+    config CHANNEL_ID
+        string "Channel ID"
+        default "PLACEHOLDER"
+        help
+            Sets the ID of the Discord Channel to post to.
+
+    config CONNECTION_MESSAGE_ENABLED
+        bool "Bot Connection Message On/Off"
+        default true
+        help
+            Enables or disables the bot sending a message when it connects. 
+
+    config CONNECTION_MESSAGE
+        string "Bot Connection Message Text"
+        default "BellBot Online"
+        help
+            Sets the message to be sent when the bot connects to the server (when this message is enabled). 
+
+endmenu
