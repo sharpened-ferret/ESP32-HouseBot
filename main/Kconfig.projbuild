@@ -18,17 +18,17 @@ menu "House-bot Configuration"
         help
             Sets the maximum number of connection retry attempts.
 
-    config CHANNEL_ID
-        string "Channel ID"
-        default "PLACEHOLDER"
-        help
-            Sets the ID of the Discord Channel to post to.
-
     config CONNECTION_MESSAGE_ENABLED
         bool "Bot Connection Message On/Off"
         default true
         help
             Enables or disables the bot sending a message when it connects. 
+
+    config CHANNEL_ID
+        string "Channel ID"
+        default "PLACEHOLDER"
+        help
+            Sets the ID of the Discord Channel to post to.
 
     config CONNECTION_MESSAGE
         string "Bot Connection Message Text"
