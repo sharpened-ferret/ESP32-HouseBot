@@ -28,7 +28,7 @@
 
 // Discord connection settings
 #define CHANNEL_ID CONFIG_CHANNEL_ID
-#define CONNECTION_MSG_ENABLED CONFIG_CONNECTION_MESSAGE_ENABLED
+// #define CONNECTION_MSG_ENABLED CONFIG_CONNECTION_MESSAGE_ENABLED
 #define CONNECTION_MSG CONFIG_CONNECTION_MESSAGE
 #define REMINDER_MSG CONFIG_REMINDER_MESSAGE
 
@@ -36,6 +36,7 @@
 static EventGroupHandle_t s_wifi_event_group;
 
 static bool BOT_CONNECTED = false;
+static bool CONNECTION_MSG_ENABLED = false;
 //static bool RESTART_FLAG = false;
 
 static discord_handle_t bot;
@@ -158,16 +159,25 @@ static void time_check() {
     ESP_LOGI(TAG, "The current date/time in the UK is: %s", strftime_buf);
     struct tm *tm_time = localtime(&now);
     int curr_day = tm_time->tm_wday;
+    unsigned long long int sleep_delay;
     ESP_LOGI(TAG, "Current Day: %d", curr_day);
-    if (curr_day == 0) {
+    if (curr_day == 2) {
         if (tm_time->tm_hour < 18) {
-            uint32_t sleep_delay = (18 - tm_time->tm_hour) * 60 * 60 * 1000000;
+            sleep_delay = (18ULL - tm_time->tm_hour) * 60 * 60 * 1000 * 1000;
             esp_sleep_enable_timer_wakeup(sleep_delay);
-            ESP_LOGI(TAG, "Sleeping for %u seconds", sleep_delay);
+            ESP_LOGI(TAG, "Sleeping for %llu seconds", (sleep_delay/1000000));
             esp_deep_sleep_start();
         } else {
+            ESP_LOGI(TAG, "Sending Reminder");
             discord_message_send(bot, &reminder_msg, NULL);
+            sleep_delay = 12ULL * 60 * 60 * 1000 * 1000;
+            ESP_LOGI(TAG, "Sleeping for %llu seconds", (sleep_delay/1000000));
+            esp_deep_sleep_start();
         }
+    } else {
+        sleep_delay = 12ULL * 60 * 60 * 1000 * 1000;
+        ESP_LOGI(TAG, "Sleeping for %llu seconds", (sleep_delay/1000000));
+        esp_sleep_enable_timer_wakeup(sleep_delay);
     }
 }
 
@@ -186,9 +196,8 @@ static void bot_discord_event_handler(void* handler_arg, esp_event_base_t base, 
                         .channel_id = CHANNEL_ID
                     };
                     discord_message_send(bot, &connectionMsg, NULL);
-                    time_check();
                 }
-                
+                time_check();
             }
             break;
 
